@@ -40,10 +40,18 @@ fn day1_part2() {
     println!("Calories of top 3 elves: {}", calories_array[0..3].iter().sum::<i32>())
 }
 
+#[derive(Clone, Copy)]
 enum RockPaperScissors {
     ROCK,
     PAPER,
     SCISSORS,
+}
+
+#[derive(Clone, Copy)]
+enum RockPaperScissorsOutcome {
+    WIN,
+    LOSE,
+    DRAW,
 }
 
 #[derive(Debug)]
@@ -72,30 +80,86 @@ impl FromStr for RockPaperScissors {
     }
 }
 
+impl FromStr for RockPaperScissorsOutcome {
+    type Err = RockPaperScissorsError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "X" => Ok(RockPaperScissorsOutcome::LOSE),
+            "Y" => Ok(RockPaperScissorsOutcome::DRAW),
+            "Z" => Ok(RockPaperScissorsOutcome::WIN),
+            _ => Err(Self::Err::new("Bad character")),
+        }
+    }
+}
+
 struct RockPaperScissorsRound {
     me: RockPaperScissors,
     thee: RockPaperScissors,
+    target: RockPaperScissorsOutcome,
+}
+
+fn action_score(x: RockPaperScissors) -> i32 {
+    match x {
+        RockPaperScissors::ROCK => 1,
+        RockPaperScissors::PAPER => 2,
+        RockPaperScissors::SCISSORS => 3,
+    }
+}
+
+fn outcome_score(x: RockPaperScissorsOutcome) -> i32 {
+    match x {
+        RockPaperScissorsOutcome::LOSE => 0,
+        RockPaperScissorsOutcome::DRAW => 3,
+        RockPaperScissorsOutcome::WIN => 6
+    }
+}
+
+fn outcome(me: RockPaperScissors, thee: RockPaperScissors) -> RockPaperScissorsOutcome {
+    match me {
+        RockPaperScissors::ROCK => match thee {
+            RockPaperScissors::ROCK => RockPaperScissorsOutcome::DRAW,
+            RockPaperScissors::PAPER => RockPaperScissorsOutcome::LOSE,
+            RockPaperScissors::SCISSORS => RockPaperScissorsOutcome::WIN,
+        },
+        RockPaperScissors::PAPER => match thee {
+            RockPaperScissors::ROCK => RockPaperScissorsOutcome::WIN,
+            RockPaperScissors::PAPER => RockPaperScissorsOutcome::DRAW,
+            RockPaperScissors::SCISSORS => RockPaperScissorsOutcome::LOSE,
+        },
+        RockPaperScissors::SCISSORS => match thee {
+            RockPaperScissors::ROCK => RockPaperScissorsOutcome::LOSE,
+            RockPaperScissors::PAPER => RockPaperScissorsOutcome::WIN,
+            RockPaperScissors::SCISSORS => RockPaperScissorsOutcome::DRAW,
+        },
+    }
+}
+
+fn achieve(thee: RockPaperScissors, target: RockPaperScissorsOutcome) -> RockPaperScissors {
+    match thee {
+        RockPaperScissors::ROCK => match target {
+            RockPaperScissorsOutcome::LOSE => RockPaperScissors::SCISSORS,
+            RockPaperScissorsOutcome::DRAW => RockPaperScissors::ROCK,
+            RockPaperScissorsOutcome::WIN => RockPaperScissors::PAPER,
+        },
+        RockPaperScissors::PAPER => match target {
+            RockPaperScissorsOutcome::LOSE => RockPaperScissors::ROCK,
+            RockPaperScissorsOutcome::DRAW => RockPaperScissors::PAPER,
+            RockPaperScissorsOutcome::WIN => RockPaperScissors::SCISSORS,
+        },
+        RockPaperScissors::SCISSORS => match target {
+            RockPaperScissorsOutcome::LOSE => RockPaperScissors::PAPER,
+            RockPaperScissorsOutcome::DRAW => RockPaperScissors::SCISSORS,
+            RockPaperScissorsOutcome::WIN => RockPaperScissors::ROCK,
+        },
+    }
 }
 
 impl RockPaperScissorsRound {
     fn score(&self) -> i32 {
-        match self.me {
-            RockPaperScissors::ROCK => 1 + match self.thee {
-                RockPaperScissors::ROCK => 3,
-                RockPaperScissors::PAPER => 0,
-                RockPaperScissors::SCISSORS => 6,
-            },
-            RockPaperScissors::PAPER => 2 + match self.thee {
-                RockPaperScissors::ROCK => 6,
-                RockPaperScissors::PAPER => 3,
-                RockPaperScissors::SCISSORS => 0,
-            },
-            RockPaperScissors::SCISSORS => 3 + match self.thee {
-                RockPaperScissors::ROCK => 0,
-                RockPaperScissors::PAPER => 6,
-                RockPaperScissors::SCISSORS => 3,
-            },
-        }
+        action_score(self.me) + outcome_score(outcome(self.me, self.thee))
+    }
+    fn score2(&self) -> i32 {
+        outcome_score(self.target) + action_score(achieve(self.thee, self.target))
     }
 }
 
@@ -108,7 +172,8 @@ impl FromStr for RockPaperScissorsRound {
         }
         let me = tokens[1].parse::<RockPaperScissors>()?;
         let thee = tokens[0].parse::<RockPaperScissors>()?;
-        Ok(RockPaperScissorsRound { me: me, thee: thee })
+        let target = tokens[1].parse::<RockPaperScissorsOutcome>()?;
+        Ok(RockPaperScissorsRound { me: me, thee: thee, target: target})
     }
 }
 
@@ -130,6 +195,8 @@ fn day2() {
     let rounds = read_day2_input().unwrap();
     let score: i32 = rounds.iter().map(RockPaperScissorsRound::score).sum();
     println!("Rock paper scissors score: {}", score);
+    let score2: i32 = rounds.iter().map(RockPaperScissorsRound::score2).sum();
+    println!("Rock paper scissors score2: {}", score2);
 }
 
 fn main() {
