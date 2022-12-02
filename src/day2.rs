@@ -142,16 +142,11 @@ impl FromStr for RockPaperScissorsRound {
 
 fn read_day2_input() -> Result<Vec<RockPaperScissorsRound>, RockPaperScissorsError> {
     let file = File::open("./inputs/day2.txt").unwrap();
-    let lines = io::BufReader::new(file).lines();
-    let rounds = lines
+    io::BufReader::new(file).lines()
         .map(|x| x.unwrap().trim().to_owned())
         .filter(|x| !x.is_empty())
-        .map(|x| x.parse::<RockPaperScissorsRound>() );
-    let mut ret = Vec::new();
-    for round in rounds {
-        ret.push(round?);
-    }
-    Ok(ret)
+        .map(|x| x.parse::<RockPaperScissorsRound>() )
+        .collect()
 }
 
 pub fn day2() {
