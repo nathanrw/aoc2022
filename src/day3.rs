@@ -11,22 +11,28 @@ struct Compartment {
 
 struct Backpack {
     original: String,
+    contents: Vec<i32>,
     left: Compartment,
     right: Compartment
 }
 
-impl Backpack {
-    fn common(&self) -> Vec<i32> {
-        let mut ret: Vec<i32> = Vec::new();
-        for l in &self.left.contents {
-            for r in &self.right.contents {
-                if *l == *r {
-                    ret.push(*l);
-                }
+fn intersection(a: Vec<i32>, b: Vec<i32>) -> Vec<i32> {
+    // note: SLOW
+    let mut ret: Vec<i32> = Vec::new();
+    for l in &a {
+        for r in &b {
+            if *l == *r {
+                ret.push(*l);
             }
         }
-        ret.dedup();
-        ret
+    }
+    ret.dedup();
+    ret
+}
+
+impl Backpack {
+    fn common(&self) -> Vec<i32> {
+        intersection(self.left.contents.to_vec(), self.right.contents.to_vec())
     }
     fn debug_print(&self) {
         println!("Backpack:");
@@ -70,7 +76,8 @@ impl FromStr for Backpack {
         let (left, right) = s.split_at(s.len()/2);
         let left_compartment = left.parse::<Compartment>()?;
         let right_compartment = right.parse::<Compartment>()?;
-        Ok(Backpack {original: s.to_owned(), left: left_compartment, right: right_compartment})
+        let contents: Vec<i32> = s.chars().map(get_ascii_ordinal).collect::<io::Result<Vec<i32>>>()?;
+        Ok(Backpack {original: s.to_owned(), contents: contents, left: left_compartment, right: right_compartment})
     }
 }
 
@@ -100,4 +107,13 @@ pub fn day3() {
     packs[0].debug_print();
     let priority_sum: i32 = packs.iter().map(|x| x.common().iter().sum::<i32>()).sum();
     println!("Backpack common priority sum: {}", priority_sum);
+    let group_sum: i32 = packs
+        .chunks(3)
+        .map(|chunk| chunk
+            .iter()
+            .map(|pack| pack.contents.to_vec())
+            .reduce(|acc, item| intersection(acc.to_vec(), item.to_vec())).unwrap()
+            .iter().sum::<i32>())
+        .sum();
+    println!("Backpack group priority sum: {}", group_sum);
 }
