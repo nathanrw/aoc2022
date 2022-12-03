@@ -1,15 +1,14 @@
-use std::fs::File;
 use std::vec::Vec;
-use std::io::{self, BufRead};
+
+use crate::utils::read_data_lines;
 
 fn read_day1_input() -> Vec<i32> {
-    let file = File::open("./inputs/day1.txt").unwrap();
-    let lines = io::BufReader::new(file).lines();
+    let lines = read_data_lines("day1.txt").unwrap();
     let mut calories: i32 = 0;
     let mut fruits: i32 = 0;
     let mut calories_array = Vec::new();
     for line in lines {
-        let line_string = line.unwrap();
+        let line_string = line;
         if line_string.trim().is_empty() {
             calories_array.push(calories);
             calories = 0;

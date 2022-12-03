@@ -1,7 +1,8 @@
-use std::fs::File;
 use std::vec::Vec;
-use std::io::{self, BufRead};
+use std::io;
 use std::str::FromStr;
+
+use crate::utils::read_data_lines;
 
 #[derive(Clone, Copy)]
 enum RockPaperScissors {
@@ -17,19 +18,14 @@ enum RockPaperScissorsOutcome {
     DRAW,
 }
 
-#[derive(Debug)]
-struct RockPaperScissorsError {
-    details: String
-}
-
-impl RockPaperScissorsError {
-    fn new(details: &str) -> RockPaperScissorsError {
-        RockPaperScissorsError{details: details.to_string()}
-    }
+struct RockPaperScissorsRound {
+    me: RockPaperScissors,
+    thee: RockPaperScissors,
+    target: RockPaperScissorsOutcome,
 }
 
 impl FromStr for RockPaperScissors {
-    type Err = RockPaperScissorsError;
+    type Err = io::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "A" => Ok(RockPaperScissors::ROCK),
@@ -38,27 +34,35 @@ impl FromStr for RockPaperScissors {
             "X" => Ok(RockPaperScissors::ROCK),
             "Y" => Ok(RockPaperScissors::PAPER),
             "Z" => Ok(RockPaperScissors::SCISSORS),
-            _ => Err(Self::Err::new("Bad character")),
+            _ => Err(Self::Err::new(io::ErrorKind::InvalidData, "Bad character")),
         }
     }
 }
 
 impl FromStr for RockPaperScissorsOutcome {
-    type Err = RockPaperScissorsError;
+    type Err = io::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "X" => Ok(RockPaperScissorsOutcome::LOSE),
             "Y" => Ok(RockPaperScissorsOutcome::DRAW),
             "Z" => Ok(RockPaperScissorsOutcome::WIN),
-            _ => Err(Self::Err::new("Bad character")),
+            _ => Err(Self::Err::new(io::ErrorKind::InvalidData, "Bad character")),
         }
     }
 }
 
-struct RockPaperScissorsRound {
-    me: RockPaperScissors,
-    thee: RockPaperScissors,
-    target: RockPaperScissorsOutcome,
+impl FromStr for RockPaperScissorsRound {
+    type Err = io::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tokens = s.split(' ').collect::<Vec<&str>>();
+        if tokens.len() != 2 {
+            return Err(Self::Err::new(io::ErrorKind::InvalidData, "Bad round"));
+        }
+        let me = tokens[1].parse::<RockPaperScissors>()?;
+        let thee = tokens[0].parse::<RockPaperScissors>()?;
+        let target = tokens[1].parse::<RockPaperScissorsOutcome>()?;
+        Ok(RockPaperScissorsRound { me: me, thee: thee, target: target})
+    }
 }
 
 fn action_score(x: RockPaperScissors) -> i32 {
@@ -126,24 +130,10 @@ impl RockPaperScissorsRound {
     }
 }
 
-impl FromStr for RockPaperScissorsRound {
-    type Err = RockPaperScissorsError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let tokens = s.split(' ').collect::<Vec<&str>>();
-        if tokens.len() != 2 {
-            return Err(Self::Err::new("Bad round"));
-        }
-        let me = tokens[1].parse::<RockPaperScissors>()?;
-        let thee = tokens[0].parse::<RockPaperScissors>()?;
-        let target = tokens[1].parse::<RockPaperScissorsOutcome>()?;
-        Ok(RockPaperScissorsRound { me: me, thee: thee, target: target})
-    }
-}
-
-fn read_day2_input() -> Result<Vec<RockPaperScissorsRound>, RockPaperScissorsError> {
-    let file = File::open("./inputs/day2.txt").unwrap();
-    io::BufReader::new(file).lines()
-        .map(|x| x.unwrap().trim().to_owned())
+fn read_day2_input() -> io::Result<Vec<RockPaperScissorsRound>> {
+    let lines = read_data_lines("day2.txt")?;
+    lines.iter()
+        .map(|x| x.trim().to_owned())
         .filter(|x| !x.is_empty())
         .map(|x| x.parse::<RockPaperScissorsRound>() )
         .collect()
