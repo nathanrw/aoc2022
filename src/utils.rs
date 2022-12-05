@@ -2,6 +2,8 @@
 use std::io;
 use std::io::BufRead;
 use std::fs::File;
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
 //use std::str::FromStr;
 
 pub fn read_data_lines(filename: &str) -> io::Result<Vec<String>> {
@@ -20,3 +22,40 @@ pub fn read_data_lines(filename: &str) -> io::Result<Vec<String>> {
 //        .map(|x| x.parse::<T>() )
 //        .collect::<Result<Vec<T>>, E>()
 //}
+
+#[derive(Debug)]
+pub struct AocError {
+    details: String
+}
+
+pub type AocResult<T> = Result<T, AocError>;
+
+impl From<std::io::Error> for AocError {
+    fn from(e: std::io::Error) -> Self {
+        AocError { details: e.to_string() }
+    }
+}
+
+impl From<std::num::ParseIntError> for AocError {
+    fn from(e: std::num::ParseIntError) -> Self {
+        AocError { details: e.to_string() }
+    }
+}
+
+impl Display for AocError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.details)
+    }
+}
+
+impl Error for AocError {
+    fn description(&self) -> &str {
+        &self.details
+    }
+}
+
+impl AocError {
+    pub fn new(msg: &str) -> Self {
+        Self{details: msg.to_string()}
+    }
+}
