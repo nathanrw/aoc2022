@@ -4,12 +4,21 @@ use std::io::BufRead;
 use std::fs::File;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
+use std::io::Read;
 //use std::str::FromStr;
 
 pub fn read_data_lines(filename: &str) -> io::Result<Vec<String>> {
     let path = "./inputs/".to_owned() + filename;
     let file = File::open(path)?;
     io::BufReader::new(file).lines().collect::<Result<_, _>>()
+}
+
+pub fn read_data_text(filename: &str) -> io::Result<String> {
+    let path = "./inputs/".to_owned() + filename;
+    let file = File::open(path)?;
+    let mut buf: String = "".to_string();
+    io::BufReader::new(file).read_to_string(&mut buf)?;
+    Ok(buf)
 }
 
 //pub fn read_data_records<T: FromStr, E = io::Error>(filename: &str) -> Result<Vec<T>, E>

@@ -24,13 +24,13 @@ impl Crates {
             Column { stack: vec!['L', 'G', 'S', 'R', 'B', 'N', 'V', 'M'] }
         ] }
     }
-    fn make_example() -> Crates {
-        Crates { stacks: vec![
-            Column { stack: vec!['Z', 'N' ] },
-            Column { stack: vec!['M', 'C', 'D' ] },
-            Column { stack: vec!['P'] },
-        ] }
-    }
+//    fn make_example() -> Crates {
+//        Crates { stacks: vec![
+//            Column { stack: vec!['Z', 'N' ] },
+//            Column { stack: vec!['M', 'C', 'D' ] },
+//            Column { stack: vec!['P'] },
+//        ] }
+//    }
 }
 
 impl Crates {
@@ -43,7 +43,7 @@ impl Crates {
     fn move_crates_batch(&mut self, num: i32, src: usize, dst: usize)
     {
         let mut tmp = Vec::new();
-        for i in 0..num {
+        for _i in 0..num {
             tmp.push(self.stacks[src].stack.pop().unwrap());
         }
         while tmp.len() != 0 {
@@ -117,7 +117,7 @@ fn read_day5_input() -> AocResult<Vec<Move>> {
         .collect()
 }
 
-pub fn day5() {
+fn do_day5(batched: bool) {
     let program = read_day5_input().unwrap();
     let mut crates = Crates::make();
     crates.print_state();
@@ -127,8 +127,17 @@ pub fn day5() {
         println!("");
         println!("{}. move {} from {} to {}", counter, cmd.amount, cmd.source+1, cmd.destination+1);
         println!("");
-        crates.execute_batched_move(&cmd);
+        if batched {
+            crates.execute_batched_move(&cmd);
+        } else {
+            crates.execute(&cmd);
+        }
         crates.print_state();
     }
     crates.output();
+}
+
+pub fn day5() {
+    do_day5(false);
+    do_day5(true);
 }
